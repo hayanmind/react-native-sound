@@ -57,9 +57,16 @@ Sound.prototype.isLoaded = function() {
 Sound.prototype.play = function(onEnd) {
   if (this._loaded) {
     RNSound.play(this._key, (successfully) => onEnd && onEnd(successfully));
-  } else {
+    if (IsAndroid) {
+      RNSound.setSpeed(this._key, this._speed);
+    }
+  }
+  else {
     onEnd && onEnd(false);
   }
+
+
+
   return this;
 };
 
@@ -159,9 +166,17 @@ Sound.prototype.setNumberOfLoops = function(value) {
 
 Sound.prototype.setSpeed = function(value) {
   this._setSpeed = value;
+  this._speed = value;
   if (this._loaded) {
-    if (!IsWindows) {
-      RNSound.setSpeed(this._key, value);
+    if (!IsWindows && !IsAndroid) {
+        RNSound.setSpeed(this._key, value);
+    }else if (IsAndroid) {
+      const isPlayingPromise = RNSound.isPlaying(this._key);
+      isPlayingPromise.then((result) => {
+        if (result) {
+          RNSound.setSpeed(this._key, value);
+        }
+      });
     }
   }
   return this;
@@ -239,7 +254,7 @@ Sound.unregisterHeadsetPlugChangeListener = function() {
       this.headsetPluggedInSubscription = null;
     }
   }
-  
+
 }
 
 // ios only
