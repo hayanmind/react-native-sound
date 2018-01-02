@@ -44,6 +44,13 @@ public class RNSoundModule extends ReactContextBaseJavaModule {
     this.category = null;
   }
 
+  private void setOnPlay(boolean isPlaying) {
+    final ReactContext reactContext = this.context;
+    WritableMap params = Arguments.createMap();
+    params.putBoolean("isPlaying", isPlaying);
+    sendEvent(reactContext, "onPlayChange", params);
+  }
+
   @Override
   public String getName() {
     return "RNSound";
@@ -83,7 +90,7 @@ public class RNSoundModule extends ReactContextBaseJavaModule {
 
     final RNSoundModule module = this;
     final int audioStreamTypeFinal = audioStreamType;
-    
+
     if (module.category != null) {
       Integer category = null;
       switch (module.category) {
@@ -215,6 +222,7 @@ public class RNSoundModule extends ReactContextBaseJavaModule {
     MediaPlayer player = this.playerPool.get(key);
     if (player == null) {
       callback.invoke(false);
+      setOnPlay(false);
       return;
     }
     if (player.isPlaying()) {
@@ -230,6 +238,7 @@ public class RNSoundModule extends ReactContextBaseJavaModule {
           callbackWasCalled = true;
           try {
             callback.invoke(true);
+            setOnPlay(false);
           } catch (Exception e) {
               //Catches the exception: java.lang.RuntimeException·Illegal callback invocation from native module
           }
@@ -244,10 +253,12 @@ public class RNSoundModule extends ReactContextBaseJavaModule {
         if (callbackWasCalled) return true;
         callbackWasCalled = true;
         callback.invoke(false);
+        setOnPlay(false);
         return true;
       }
     });
     player.start();
+    setOnPlay(true);
   }
 
   @ReactMethod
@@ -375,16 +386,6 @@ public class RNSoundModule extends ReactContextBaseJavaModule {
   @ReactMethod
   public void enable(final Boolean enabled) {
     // no op
-  }
-
-  @ReactMethod
-  public void isPlaying(final Integer key, Promise promise) {
-    MediaPlayer player = this.playerPool.get(key);
-    if (player != null) {
-      promise.resolve(player.isPlaying());
-    } else {
-      promise.resolve(false);
-    }
   }
 
   private void sendEvent(ReactContext reactContext,

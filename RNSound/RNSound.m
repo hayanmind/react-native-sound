@@ -291,7 +291,7 @@ RCT_REMAP_METHOD(isHeadsetPlugged,
 
 - (BOOL)isHeadsetPlugged {
     AVAudioSessionRouteDescription *route = [[AVAudioSession sharedInstance] currentRoute];
-    
+
     BOOL headphonesLocated = NO;
     for( AVAudioSessionPortDescription *portDescription in route.outputs ) {
         headphonesLocated |= ( [portDescription.portType isEqualToString:AVAudioSessionPortHeadphones] );
@@ -317,18 +317,6 @@ RCT_EXPORT_METHOD(removeRouteChangeListener) {
     [[NSNotificationCenter defaultCenter] removeObserver:self
                                                   name:@"AVAudioSessionRouteChangeNotification"
                                                 object: [AVAudioSession sharedInstance]];
-}
-
-RCT_REMAP_METHOD(isPlaying,
-                 playerKey:(nonnull NSNumber*)key
-                 resolver:(RCTPromiseResolveBlock)resolve
-                 rejecter:(RCTPromiseRejectBlock)reject) {
-  AVAudioPlayer* player = [self playerForKey:key];
-  if (player) {
-    resolve(@(player.isPlaying));
-  } else {
-    resolve(@(false));
-  }
 }
 
 @end

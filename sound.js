@@ -46,6 +46,7 @@ function Sound(filename, basePath, onError, options) {
     }
     if (error === null) {
       this._loaded = true;
+      this.registerOnPlayListener();
     }
     onError && onError(error, props);
   });
@@ -61,38 +62,38 @@ Sound.prototype.play = function(onEnd) {
     if (IsAndroid) {
       RNSound.setSpeed(this._key, this._speed);
     }
-    this._playing = true;
   }
   else {
     onEnd && onEnd(false);
   }
-
-
-
   return this;
 };
 
 Sound.prototype.pause = function(callback) {
   if (this._loaded) {
-    RNSound.pause(this._key, () => { callback && callback() });
+    RNSound.pause(this._key, () => {
+      this._playing = false;
+      callback && callback();
+    });
   }
-  this._playing = false;
   return this;
 };
 
 Sound.prototype.stop = function(callback) {
   if (this._loaded) {
-    RNSound.stop(this._key, () => { callback && callback() });
+    RNSound.stop(this._key, () => {
+      this._playing = false;
+      callback && callback();
+    });
   }
-  this._playing = false;
   return this;
 };
 
 Sound.prototype.reset = function() {
   if (this._loaded && IsAndroid) {
     RNSound.reset(this._key);
+    this._playing = false;
   }
-  this._playing = false;
   return this;
 };
 
@@ -170,11 +171,10 @@ Sound.prototype.setNumberOfLoops = function(value) {
 };
 
 Sound.prototype.setSpeed = function(value) {
-  this._setSpeed = value;
   this._speed = value;
   if (this._loaded) {
     if (!IsWindows && !IsAndroid) {
-        RNSound.setSpeed(this._key, value);
+      RNSound.setSpeed(this._key, value);
     } else if (IsAndroid) {
       if(this._playing) {
         RNSound.setSpeed(this._key, value);
@@ -207,11 +207,7 @@ Sound.prototype.setSpeakerphoneOn = function(value) {
 };
 
 Sound.prototype.isPlaying = function() {
-  if (this._loaded) {
-    return RNSound.isPlaying(this._key);
-  } else {
-    return Promise.resolve(false);
-  }
+  return this._playing;
 };
 
 Sound.adjustStreamVolume = function(streamType, direction, flags) {
@@ -247,6 +243,30 @@ Sound.registerHeadsetPlugChangeListener = function(headsetPluggedInListener) {
   }
 };
 
+Sound.prototype.registerOnPlayListener = function(onPlayListener) {
+  if (this.onPlaySubscription != null) {
+    console.warn('On Play change event Listener is already registered');
+    return;
+  }
+
+  if(!IsWindows) {
+    this.onPlaySubscription = eventEmitter.addListener(
+      'onPlayChange',
+      (param) => {
+        const { isPlaying } = param;
+        if (isPlaying) {
+          this._playing = true;
+        }
+        else {
+          this._playing = false;
+        }
+
+        onPlayListener && onPlayListener(isPlaying);
+      },
+    );
+  }
+}
+
 Sound.unregisterHeadsetPlugChangeListener = function() {
   // console.log('Unregister headset plug change event listener');
   if (!IsWindows) {
@@ -257,6 +277,15 @@ Sound.unregisterHeadsetPlugChangeListener = function() {
     }
   }
 
+}
+
+Sound.unregisterOnPlayListener = function() {
+  if (!IsWindows) {
+    if (this.onPlaySubscription != null) {
+      this.onPlaySubscription.remove();
+      this.onPlaySubscription = null;
+    }
+  }
 }
 
 // ios only
