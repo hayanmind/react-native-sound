@@ -13,6 +13,29 @@ function isRelativePath(path) {
   return !/^(\/|http(s?)|asset)/.test(path);
 }
 
+const registerOnPlay = function(onPlayListener) {
+  if (this.onPlaySubscription != null) {
+    console.warn('On Play change event listener is already registered');
+    return;
+  }
+
+  if(!IsWindows) {
+    this.onPlaySubscription = eventEmitter.addListener(
+      'onPlayChange',
+      (param) => {
+        const { isPlaying } = param;
+        if (isPlaying) {
+          this._playing = true;
+        }
+        else {
+          this._playing = false;
+        }
+        onPlayListener && onPlayListener(isPlaying);
+      },
+    );
+  }
+}
+
 function Sound(filename, basePath, onError, options) {
   var asset = resolveAssetSource(filename);
   if (asset) {
@@ -46,7 +69,8 @@ function Sound(filename, basePath, onError, options) {
     }
     if (error === null) {
       this._loaded = true;
-      this.registerOnPlayListener();
+      this.registerOnPlay = registerOnPlay.bind(this);
+      this.registerOnPlay();
     }
     onError && onError(error, props);
   });
@@ -56,8 +80,9 @@ Sound.prototype.isLoaded = function() {
   return this._loaded;
 };
 
-Sound.prototype.play = function(onEnd) {
+Sound.prototype.play = function(onEnd, onPlay) {
   if (this._loaded) {
+    onPlay && this.registerOnPlay(onPlay);
     RNSound.play(this._key, (successfully) => onEnd && onEnd(successfully));
     if (IsAndroid) {
       RNSound.setSpeed(this._key, this._speed);
@@ -101,6 +126,12 @@ Sound.prototype.release = function() {
   if (this._loaded) {
     RNSound.release(this._key);
     this._loaded = false;
+    if (!IsWindows) {
+      if (this.onPlaySubscription != null) {
+        this.onPlaySubscription.remove();
+        this.onPlaySubscription = null;
+      }
+    }
   }
   return this;
 };
@@ -243,30 +274,6 @@ Sound.registerHeadsetPlugChangeListener = function(headsetPluggedInListener) {
   }
 };
 
-Sound.prototype.registerOnPlayListener = function(onPlayListener) {
-  if (this.onPlaySubscription != null) {
-    console.warn('On Play change event Listener is already registered');
-    return;
-  }
-
-  if(!IsWindows) {
-    this.onPlaySubscription = eventEmitter.addListener(
-      'onPlayChange',
-      (param) => {
-        const { isPlaying } = param;
-        if (isPlaying) {
-          this._playing = true;
-        }
-        else {
-          this._playing = false;
-        }
-
-        onPlayListener && onPlayListener(isPlaying);
-      },
-    );
-  }
-}
-
 Sound.unregisterHeadsetPlugChangeListener = function() {
   // console.log('Unregister headset plug change event listener');
   if (!IsWindows) {
@@ -274,16 +281,6 @@ Sound.unregisterHeadsetPlugChangeListener = function() {
       RNSound.removeRouteChangeListener();
       this.headsetPluggedInSubscription.remove();
       this.headsetPluggedInSubscription = null;
-    }
-  }
-
-}
-
-Sound.unregisterOnPlayListener = function() {
-  if (!IsWindows) {
-    if (this.onPlaySubscription != null) {
-      this.onPlaySubscription.remove();
-      this.onPlaySubscription = null;
     }
   }
 }

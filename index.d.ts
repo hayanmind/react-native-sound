@@ -210,17 +210,6 @@ declare class Sound {
    * Return whether the audio player is currently playing or not
    */
   isPlaying(): boolean
-
-    /**
-   * Register a on start playing listener
-   */
-  registerOnPlayListener(): void
-
-  /**
-   * Unregister the attached on start playing listener
-   */
-  unregisterOnPlayListener(): void
-
 }
 
 export = Sound;
