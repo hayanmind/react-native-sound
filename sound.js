@@ -23,14 +23,16 @@ const registerOnPlay = function(onPlayListener) {
     this.onPlaySubscription = eventEmitter.addListener(
       'onPlayChange',
       (param) => {
-        const { isPlaying } = param;
-        if (isPlaying) {
-          this._playing = true;
+        const { isPlaying, key } = param;
+        if (key == this._key) {
+          if (isPlaying) {
+            this._playing = true;
+          }
+          else {
+            this._playing = false;
+          }
+          onPlayListener && onPlayListener(isPlaying);
         }
-        else {
-          this._playing = false;
-        }
-        onPlayListener && onPlayListener(isPlaying);
       },
     );
   }
