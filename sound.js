@@ -209,9 +209,9 @@ Sound.prototype.setSpeed = function(value) {
     if (!IsWindows && !IsAndroid) {
       RNSound.setSpeed(this._key, value);
     } else if (IsAndroid) {
-      if(this._playing) {
-        RNSound.setSpeed(this._key, value);
-      }
+        if(this._playing) {
+          RNSound.setSpeed(this._key, value);
+        }
     }
   }
   return this;

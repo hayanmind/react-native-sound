@@ -222,8 +222,8 @@ public class RNSoundModule extends ReactContextBaseJavaModule {
   public void play(final Integer key, final Callback callback) {
     MediaPlayer player = this.playerPool.get(key);
     if (player == null) {
-      callback.invoke(false);
       setOnPlay(false, key);
+      callback.invoke(false);
       return;
     }
     if (player.isPlaying()) {
@@ -235,11 +235,11 @@ public class RNSoundModule extends ReactContextBaseJavaModule {
       @Override
       public synchronized void onCompletion(MediaPlayer mp) {
         if (!mp.isLooping()) {
+          setOnPlay(false, key);
           if (callbackWasCalled) return;
           callbackWasCalled = true;
           try {
             callback.invoke(true);
-            setOnPlay(false, key);
           } catch (Exception e) {
               //Catches the exception: java.lang.RuntimeException·Illegal callback invocation from native module
           }
@@ -251,10 +251,10 @@ public class RNSoundModule extends ReactContextBaseJavaModule {
 
       @Override
       public synchronized boolean onError(MediaPlayer mp, int what, int extra) {
+        setOnPlay(false, key);
         if (callbackWasCalled) return true;
         callbackWasCalled = true;
         callback.invoke(false);
-        setOnPlay(false, key);
         return true;
       }
     });

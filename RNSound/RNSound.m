@@ -47,6 +47,9 @@
   if (key == nil) return;
 
   @synchronized(key) {
+    if (!flag) {
+      [self setOnPlay:flag forKey:key];
+    }
     RCTResponseSenderBlock callback = [self callbackForKey:key];
     if (callback) {
       callback(@[@(flag)]);
@@ -59,7 +62,7 @@ RCT_EXPORT_MODULE();
 
 - (NSArray<NSString *> *)supportedEvents
 {
-    return @[@"RouteChange"];
+    return @[@"RouteChange", @"onPlayChange"];
 }
 
 -(NSDictionary *)constantsToExport {
@@ -196,6 +199,7 @@ RCT_EXPORT_METHOD(play:(nonnull NSNumber*)key withCallback:(RCTResponseSenderBlo
   if (player) {
     [[self callbackPool] setObject:[callback copy] forKey:key];
     [player play];
+    [self setOnPlay:YES forKey:key];
   }
 }
 
@@ -303,6 +307,11 @@ RCT_REMAP_METHOD(isHeadsetPlugged,
     BOOL headsetPlugged = [self isHeadsetPlugged];
 
     [self sendEventWithName:@"RouteChange" body:@{@"isHeadsetPlugged": headsetPlugged ? @YES : @NO}];
+}
+
+- (void)setOnPlay:(BOOL)isPlaying forKey:(nonnull NSNumber*)key {
+
+    [self sendEventWithName:@"onPlayChange" body:@{@"isPlaying": isPlaying ? @YES : @NO, @"key": key}];
 }
 
 RCT_EXPORT_METHOD(addRouteChangeListener) {
