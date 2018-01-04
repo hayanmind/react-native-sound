@@ -13,31 +13,6 @@ function isRelativePath(path) {
   return !/^(\/|http(s?)|asset)/.test(path);
 }
 
-const registerOnPlay = function(onPlayListener) {
-  if (this.onPlaySubscription != null) {
-    console.warn('On Play change event listener is already registered');
-    return;
-  }
-
-  if(!IsWindows) {
-    this.onPlaySubscription = eventEmitter.addListener(
-      'onPlayChange',
-      (param) => {
-        const { isPlaying, key } = param;
-        if (key == this._key) {
-          if (isPlaying) {
-            this._playing = true;
-          }
-          else {
-            this._playing = false;
-          }
-          onPlayListener && onPlayListener(isPlaying);
-        }
-      },
-    );
-  }
-}
-
 function Sound(filename, basePath, onError, options) {
   var asset = resolveAssetSource(filename);
   if (asset) {
@@ -48,6 +23,30 @@ function Sound(filename, basePath, onError, options) {
 
     if (IsAndroid && !basePath && isRelativePath(filename)) {
       this._filename = filename.toLowerCase().replace(/\.[^.]+$/, '');
+    }
+  }
+
+  this.registerOnPlay = function() {
+    if (this.onPlaySubscription != null) {
+      console.warn('On Play change event listener is already registered');
+      return;
+    }
+
+    if (!IsWindows) {
+      this.onPlaySubscription = eventEmitter.addListener(
+        'onPlayChange',
+        (param) => {
+          const { isPlaying, key } = param;
+          if (key == this._key) {
+            if (isPlaying) {
+              this._playing = true;
+            }
+            else {
+              this._playing = false;
+            }
+          }
+        },
+      );
     }
   }
 
@@ -71,7 +70,6 @@ function Sound(filename, basePath, onError, options) {
     }
     if (error === null) {
       this._loaded = true;
-      this.registerOnPlay = registerOnPlay.bind(this);
       this.registerOnPlay();
     }
     onError && onError(error, props);
@@ -82,9 +80,8 @@ Sound.prototype.isLoaded = function() {
   return this._loaded;
 };
 
-Sound.prototype.play = function(onEnd, onPlay) {
+Sound.prototype.play = function(onEnd) {
   if (this._loaded) {
-    onPlay && this.registerOnPlay(onPlay);
     RNSound.play(this._key, (successfully) => onEnd && onEnd(successfully));
     if (IsAndroid) {
       RNSound.setSpeed(this._key, this._speed);
@@ -163,7 +160,7 @@ Sound.prototype.setVolume = function(value) {
 };
 
 Sound.prototype.getSystemVolume = function(callback) {
-  if(IsAndroid) {
+  if (IsAndroid) {
     RNSound.getSystemVolume(callback);
   }
   return this;
@@ -208,10 +205,10 @@ Sound.prototype.setSpeed = function(value) {
   if (this._loaded) {
     if (!IsWindows && !IsAndroid) {
       RNSound.setSpeed(this._key, value);
-    // Call native setSpeed method only if the media player is already playing.
-    // To prevent android from playing automatically when setSpeed is called.
     } else if (IsAndroid) {
-        if(this._playing) {
+        // Call native setSpeed method only if the media player is already playing.
+        // To prevent android from playing automatically when setSpeed is called.
+        if (this._playing) {
           RNSound.setSpeed(this._key, value);
         }
     }
