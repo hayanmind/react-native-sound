@@ -48,7 +48,7 @@
 
   @synchronized(key) {
     if (!flag) {
-      [self setOnPlay:flag forKey:key];
+      [self setOnPlay:NO forKey:key];
     }
     RCTResponseSenderBlock callback = [self callbackForKey:key];
     if (callback) {
