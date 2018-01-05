@@ -7,7 +7,7 @@ var IsWindows = RNSound.IsWindows;
 var resolveAssetSource = require("react-native/Libraries/Image/resolveAssetSource");
 var nextKey = 0;
 
-const eventEmitter = new NativeEventEmitter(RNSound);
+var eventEmitter = new NativeEventEmitter(RNSound);
 
 function isRelativePath(path) {
   return !/^(\/|http(s?)|asset)/.test(path);
@@ -36,8 +36,8 @@ function Sound(filename, basePath, onError, options) {
       this.onPlaySubscription = eventEmitter.addListener(
         'onPlayChange',
         (param) => {
-          const { isPlaying, key } = param;
-          if (key == this._key) {
+          const { isPlaying, playerKey } = param;
+          if (playerKey === this._key) {
             if (isPlaying) {
               this._playing = true;
             }
@@ -84,6 +84,10 @@ Sound.prototype.play = function(onEnd) {
   if (this._loaded) {
     RNSound.play(this._key, (successfully) => onEnd && onEnd(successfully));
     if (IsAndroid) {
+      // For Android
+      // Manually call native setSpeed() after native play() to apply current speed.
+      // Native setSpeed method should be called only if the media player is already playing.
+      // To prevent android from playing automatically when setSpeed is called.
       RNSound.setSpeed(this._key, this._speed);
     }
   }
@@ -206,11 +210,12 @@ Sound.prototype.setSpeed = function(value) {
     if (!IsWindows && !IsAndroid) {
       RNSound.setSpeed(this._key, value);
     } else if (IsAndroid) {
-        // Call native setSpeed method only if the media player is already playing.
-        // To prevent android from playing automatically when setSpeed is called.
-        if (this._playing) {
-          RNSound.setSpeed(this._key, value);
-        }
+      //For Android
+      // Call native setSpeed method only if the media player is already playing.
+      // To prevent android from playing automatically when setSpeed is called.
+      if (this._playing) {
+        RNSound.setSpeed(this._key, value);
+      }
     }
   }
   return this;

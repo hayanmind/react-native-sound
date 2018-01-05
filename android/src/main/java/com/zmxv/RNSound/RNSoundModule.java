@@ -44,11 +44,11 @@ public class RNSoundModule extends ReactContextBaseJavaModule {
     this.category = null;
   }
 
-  private void setOnPlay(boolean isPlaying, final Integer key) {
+  private void setOnPlay(boolean isPlaying, final Integer playerKey) {
     final ReactContext reactContext = this.context;
     WritableMap params = Arguments.createMap();
     params.putBoolean("isPlaying", isPlaying);
-    params.putInt("key", key);
+    params.putInt("playerKey", playerKey);
     sendEvent(reactContext, "onPlayChange", params);
   }
 
