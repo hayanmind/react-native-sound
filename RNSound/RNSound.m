@@ -47,9 +47,7 @@
   if (key == nil) return;
 
   @synchronized(key) {
-    if (!flag) {
-      [self setOnPlay:NO forKey:key];
-    }
+    [self setOnPlay:NO forKey:key];
     RCTResponseSenderBlock callback = [self callbackForKey:key];
     if (callback) {
       callback(@[@(flag)]);
