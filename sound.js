@@ -210,7 +210,7 @@ Sound.prototype.setSpeed = function(value) {
     if (!IsWindows && !IsAndroid) {
       RNSound.setSpeed(this._key, value);
     } else if (IsAndroid) {
-      //For Android
+      // For Android
       // Call native setSpeed method only if the media player is already playing.
       // To prevent android from playing automatically when setSpeed is called.
       if (this._playing) {
