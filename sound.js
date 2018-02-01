@@ -117,10 +117,36 @@ Sound.prototype.stop = function(callback) {
   return this;
 };
 
-Sound.prototype.reset = function() {
+Sound.prototype.setStreamType = function(streamType, callback) {
+  // For android only.
+  // Resets current mediaPlayer, change streamType, and prepare again.
+  if (IsAndroid) {
+    if (!this._loaded) {
+      RNSound.prepare(this._filename, this._key, streamType || {}, (error, props) => {
+        if (props) {
+          if (typeof props.duration === 'number') {
+            this._duration = props.duration;
+          }
+          if (typeof props.numberOfChannels === 'number') {
+            this._numberOfChannels = props.numberOfChannels;
+          }
+        }
+        if (error === null) {
+          this._loaded = true;
+          callback && callback();
+        }
+      });
+    }
+  }
+}
+
+Sound.prototype.reset = function(callback) {
   if (this._loaded && IsAndroid) {
-    RNSound.reset(this._key);
-    this._playing = false;
+    RNSound.reset(this._key, () => {
+      this._playing = false;
+      this._loaded = false;
+      callback && callback();
+    });
   }
   return this;
 };

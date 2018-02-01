@@ -37,11 +37,14 @@ public class RNSoundModule extends ReactContextBaseJavaModule {
   final static Object NULL = null;
   BroadcastReceiver broadcastReceiverHeadsetPlugged = null;
   String category;
+  private static final String TAG = "ReactNativeJS";
+  private AudioManager am;
 
   public RNSoundModule(ReactApplicationContext context) {
     super(context);
     this.context = context;
     this.category = null;
+    am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
   }
 
   private void setOnPlay(boolean isPlaying, final Integer playerKey) {
@@ -57,6 +60,61 @@ public class RNSoundModule extends ReactContextBaseJavaModule {
     return "RNSound";
   }
 
+  // @ReactMethod
+  // public void getAudioFocus(final Callback callback) {
+  //   am.requestAudioFocus(new AudioManager.OnAudioFocusChangeListener() {
+  //     boolean callbackWasCalled = false;
+  //     @Override
+  //     public void onAudioFocusChange(int focusChange) {
+  //       if (callbackWasCalled) return;
+  //       callbackWasCalled = true;
+  //       Log.d(TAG, "audio change: " + focusChange);
+  //       // if (focusChange == AudioManager.AUDIOFOCUS_GAIN) {
+
+  //       // } else if (focusChange == AudioManager.AUDIOFOCUS_LOSS) {
+
+  //       // } else if (focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT) {
+
+  //       // } else if (focusChange == AudioManagner.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK) {
+
+  //       // }
+  //       try {
+  //         callback.invoke(focusChange);
+  //       } catch(RuntimeException runtimeException) {
+  //         // The callback was already invoked
+  //         Log.e("RNSoundModule", "Exception", runtimeException);
+  //       }
+  //     }
+  //   }, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE);
+  // }
+
+  // @ReactMethod
+  // public void abandonAudioFocus(final Callback callback) {
+  //   am.abandonAudioFocus(new AudioManager.OnAudioFocusChangeListener() {
+  //     boolean callbackWasCalled = false;
+
+  //     @Override
+  //     public void onAudioFocusChange(int focusChange) {
+  //       if (callbackWasCalled) return;
+  //       callbackWasCalled = true;
+  //       // if (focusChange == AudioManager.AUDIOFOCUS_GAIN) {
+
+  //       // } else if (focusChange == AudioManager.AUDIOFOCUS_LOSS) {
+
+  //       // } else if (focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT) {
+
+  //       // } else if (focusChange == AudioManagner.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK) {
+
+  //       // }
+  //       try {
+  //         callback.invoke(focusChange);
+  //       } catch(RuntimeException runtimeException) {
+  //         // The callback was already invoked
+  //         Log.e("RNSoundModule", "Exception", runtimeException);
+  //       }
+  //     }
+  //   });
+  // }
   @ReactMethod
   public void prepare(final String fileName, final Integer key, final ReadableMap options, final Callback callback) {
     int audioStreamType = AudioManager.STREAM_MUSIC;
@@ -81,14 +139,19 @@ public class RNSoundModule extends ReactContextBaseJavaModule {
       }
     }
 
-    MediaPlayer player = createMediaPlayer(fileName);
-    if (player == null) {
-      WritableMap e = Arguments.createMap();
-      e.putInt("code", -1);
-      e.putString("message", "resource not found");
-      return;
-    }
+    MediaPlayer player = this.playerPool.get(key);
 
+    if (player == null) {
+      player = createMediaPlayer(fileName);
+      if (player == null) {
+        WritableMap e = Arguments.createMap();
+        e.putInt("code", -1);
+        e.putString("message", "resource not found");
+        return;
+      }
+    } else {
+      player = setSource(player,fileName);
+    }
     final RNSoundModule module = this;
     final int audioStreamTypeFinal = audioStreamType;
 
@@ -112,7 +175,6 @@ public class RNSoundModule extends ReactContextBaseJavaModule {
         player.setAudioStreamType(category);
       }
     }
-
     player.setAudioStreamType(audioStreamTypeFinal);
 
     player.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
@@ -122,7 +184,6 @@ public class RNSoundModule extends ReactContextBaseJavaModule {
       public synchronized void onPrepared(MediaPlayer mp) {
         if (callbackWasCalled) return;
         callbackWasCalled = true;
-
         module.playerPool.put(key, mp);
         WritableMap props = Arguments.createMap();
         props.putDouble("duration", mp.getDuration() * .001);
@@ -134,7 +195,6 @@ public class RNSoundModule extends ReactContextBaseJavaModule {
         }
         module.context.getCurrentActivity().setVolumeControlStream(audioStreamTypeFinal);
       }
-
     });
 
     player.setOnErrorListener(new OnErrorListener() {
@@ -156,7 +216,6 @@ public class RNSoundModule extends ReactContextBaseJavaModule {
         return true;
       }
     });
-
     try {
       player.prepareAsync();
     } catch (IllegalStateException ignored) {
@@ -165,9 +224,8 @@ public class RNSoundModule extends ReactContextBaseJavaModule {
     }
   }
 
-  protected MediaPlayer createMediaPlayer(final String fileName) {
+  protected MediaPlayer setSource(MediaPlayer mediaPlayer, final String fileName) {
     int res = this.context.getResources().getIdentifier(fileName, "raw", this.context.getPackageName());
-    MediaPlayer mediaPlayer = new MediaPlayer();
     if (res != 0) {
       try {
         AssetFileDescriptor afd = context.getResources().openRawResourceFd(res);
@@ -216,6 +274,12 @@ public class RNSoundModule extends ReactContextBaseJavaModule {
       return mediaPlayer;
     }
     return null;
+  }
+
+  protected MediaPlayer createMediaPlayer(final String fileName) {
+    MediaPlayer mediaPlayer = new MediaPlayer();
+    mediaPlayer = setSource(mediaPlayer, fileName);
+    return mediaPlayer;
   }
 
   @ReactMethod
@@ -282,11 +346,12 @@ public class RNSoundModule extends ReactContextBaseJavaModule {
   }
 
   @ReactMethod
-  public void reset(final Integer key) {
+  public void reset(final Integer key, final Callback callback) {
     MediaPlayer player = this.playerPool.get(key);
     if (player != null) {
       player.reset();
     }
+    callback.invoke();
   }
 
   @ReactMethod
