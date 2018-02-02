@@ -119,9 +119,11 @@ Sound.prototype.stop = function(callback) {
 
 Sound.prototype.setStreamType = function(streamType, callback) {
   // For android only.
-  // Resets current mediaPlayer, change streamType, and prepare again.
-  if (IsAndroid) {
-    if (!this._loaded) {
+  // resets current media player, sets streamType, and prepare again.
+  if (IsAndroid && this._loaded) {
+    RNSound.reset(this._key, () => {
+      this._playing = false;
+      this._loaded = false;
       RNSound.prepare(this._filename, this._key, streamType || {}, (error, props) => {
         if (props) {
           if (typeof props.duration === 'number') {
@@ -136,7 +138,7 @@ Sound.prototype.setStreamType = function(streamType, callback) {
           callback && callback();
         }
       });
-    }
+    });
   }
 }
 
