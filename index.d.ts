@@ -201,7 +201,7 @@ declare class Sound {
   setCategory(value: AVAudioSessionCategory): void
 
   /**
-   * Turn speaker phone on (android only)
+   * Turn speaker phone on.
    * @param value
    */
   setSpeakerphoneOn(value: boolean): void
