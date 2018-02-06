@@ -144,7 +144,7 @@ declare class Sound {
   setCurrentTime(value: number): void
 
   /**
-   * Speed of the audio playback (iOS Only).
+   * Speed of the audio playback.
    * @param value
    */
   setSpeed(value: number): void
