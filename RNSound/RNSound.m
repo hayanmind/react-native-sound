@@ -11,6 +11,35 @@
   NSMutableDictionary* _callbackPool;
 }
 
+@synthesize _key = _key;
+
+- (void)audioSessionChangeObserver:(NSNotification *)notification{
+    NSDictionary* userInfo = notification.userInfo;
+    AVAudioSessionRouteChangeReason audioSessionRouteChangeReason = [userInfo[@"AVAudioSessionRouteChangeReasonKey"] longValue];
+    AVAudioSessionInterruptionType audioSessionInterruptionType   = [userInfo[@"AVAudioSessionInterruptionTypeKey"] longValue];
+    AVAudioPlayer* player = [self playerForKey:self._key];
+    if (audioSessionRouteChangeReason == AVAudioSessionRouteChangeReasonNewDeviceAvailable){
+        if (player) {
+            [player play];
+        }
+    }
+    if (audioSessionInterruptionType == AVAudioSessionInterruptionTypeEnded){
+        if (player && player.isPlaying) {
+            [player play];
+        }
+    }
+    if (audioSessionRouteChangeReason == AVAudioSessionRouteChangeReasonOldDeviceUnavailable){
+        if (player) {
+            [player pause];
+        }
+    }
+    if (audioSessionInterruptionType == AVAudioSessionInterruptionTypeBegan){
+        if (player) {
+            [player pause];
+        }
+    }
+}
+
 -(NSMutableDictionary*) playerPool {
   if (!_playerPool) {
     _playerPool = [NSMutableDictionary new];
@@ -164,7 +193,7 @@ RCT_EXPORT_METHOD(prepare:(NSString*)fileName
   AVAudioPlayer* player;
 
   if ([fileName hasPrefix:@"http"]) {
-    fileNameUrl = [NSURL URLWithString:[fileName stringByRemovingPercentEncoding]];
+    fileNameUrl = [NSURL URLWithString:fileName];
     NSData* data = [NSData dataWithContentsOfURL:fileNameUrl];
     player = [[AVAudioPlayer alloc] initWithData:data error:&error];
   }
@@ -173,7 +202,7 @@ RCT_EXPORT_METHOD(prepare:(NSString*)fileName
     player = [[AVAudioPlayer alloc] initWithContentsOfURL:fileNameUrl error:&error];
   }
   else {
-    fileNameUrl = [NSURL fileURLWithPath:[fileName stringByRemovingPercentEncoding]];
+    fileNameUrl = [NSURL URLWithString: fileName];
     player = [[AVAudioPlayer alloc]
               initWithContentsOfURL:fileNameUrl
               error:&error];
@@ -270,6 +299,7 @@ RCT_EXPORT_METHOD(getCurrentTime:(nonnull NSNumber*)key
   }
 }
 
+<<<<<<< HEAD
 RCT_EXPORT_METHOD(setSpeakerphoneOn:(BOOL)enabled) {
   AVAudioSession *session = [AVAudioSession sharedInstance];
   NSError *error = nil;
@@ -291,7 +321,7 @@ RCT_REMAP_METHOD(isHeadsetPlugged,
 
 - (BOOL)isHeadsetPlugged {
     AVAudioSessionRouteDescription *route = [[AVAudioSession sharedInstance] currentRoute];
-    
+
     BOOL headphonesLocated = NO;
     for( AVAudioSessionPortDescription *portDescription in route.outputs ) {
         headphonesLocated |= ( [portDescription.portType isEqualToString:AVAudioSessionPortHeadphones] );
@@ -329,6 +359,11 @@ RCT_REMAP_METHOD(isPlaying,
   } else {
     resolve(@(false));
   }
+=======
++ (BOOL)requiresMainQueueSetup
+{
+    return YES;
+>>>>>>> f4e6216aa692957d22c57fdb73a302951e91cc57
 }
 
 @end
