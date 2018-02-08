@@ -124,19 +124,19 @@ Sound.prototype.setStreamType = function(streamType, callback) {
   if (streamType == null) {
     const error = new Error('invalid streamType');
     throw error;
-    callback & callback(error);
+    callback && callback(error);
     return this;
   }
   if (!IsAndroid) {
     const error = new Error('setStreamType is only supported in Android');
     throw error;
-    callback & callback(error);
+    callback && callback(error);
     return this;
   }
   if (this._loaded) {
     const error = new Error('reset() is required If player is already prepared.');
     throw error;
-    callback & callback(error);
+    callback && callback(error);
     return this;
   }
   RNSound.prepare(this._filename, this._key, { audioStreamType: streamType } || {}, (error, props) => {
