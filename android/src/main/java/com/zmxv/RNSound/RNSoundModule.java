@@ -21,7 +21,6 @@ import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
-import com.facebook.react.modules.core.ExceptionsManagerModule;
 
 import java.io.File;
 import java.util.HashMap;
@@ -37,7 +36,6 @@ public class RNSoundModule extends ReactContextBaseJavaModule {
   final static Object NULL = null;
   BroadcastReceiver broadcastReceiverHeadsetPlugged = null;
   String category;
-  private static final String TAG = "ReactNativeJS";
   private AudioManager am;
 
   public RNSoundModule(ReactApplicationContext context) {
@@ -60,61 +58,6 @@ public class RNSoundModule extends ReactContextBaseJavaModule {
     return "RNSound";
   }
 
-  // @ReactMethod
-  // public void getAudioFocus(final Callback callback) {
-  //   am.requestAudioFocus(new AudioManager.OnAudioFocusChangeListener() {
-  //     boolean callbackWasCalled = false;
-  //     @Override
-  //     public void onAudioFocusChange(int focusChange) {
-  //       if (callbackWasCalled) return;
-  //       callbackWasCalled = true;
-  //       Log.d(TAG, "audio change: " + focusChange);
-  //       // if (focusChange == AudioManager.AUDIOFOCUS_GAIN) {
-
-  //       // } else if (focusChange == AudioManager.AUDIOFOCUS_LOSS) {
-
-  //       // } else if (focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT) {
-
-  //       // } else if (focusChange == AudioManagner.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK) {
-
-  //       // }
-  //       try {
-  //         callback.invoke(focusChange);
-  //       } catch(RuntimeException runtimeException) {
-  //         // The callback was already invoked
-  //         Log.e("RNSoundModule", "Exception", runtimeException);
-  //       }
-  //     }
-  //   }, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE);
-  // }
-
-  // @ReactMethod
-  // public void abandonAudioFocus(final Callback callback) {
-  //   am.abandonAudioFocus(new AudioManager.OnAudioFocusChangeListener() {
-  //     boolean callbackWasCalled = false;
-
-  //     @Override
-  //     public void onAudioFocusChange(int focusChange) {
-  //       if (callbackWasCalled) return;
-  //       callbackWasCalled = true;
-  //       // if (focusChange == AudioManager.AUDIOFOCUS_GAIN) {
-
-  //       // } else if (focusChange == AudioManager.AUDIOFOCUS_LOSS) {
-
-  //       // } else if (focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT) {
-
-  //       // } else if (focusChange == AudioManagner.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK) {
-
-  //       // }
-  //       try {
-  //         callback.invoke(focusChange);
-  //       } catch(RuntimeException runtimeException) {
-  //         // The callback was already invoked
-  //         Log.e("RNSoundModule", "Exception", runtimeException);
-  //       }
-  //     }
-  //   });
-  // }
   @ReactMethod
   public void prepare(final String fileName, final Integer key, final ReadableMap options, final Callback callback) {
     int audioStreamType = AudioManager.STREAM_MUSIC;
@@ -346,12 +289,11 @@ public class RNSoundModule extends ReactContextBaseJavaModule {
   }
 
   @ReactMethod
-  public void reset(final Integer key, final Callback callback) {
+  public void reset(final Integer key) {
     MediaPlayer player = this.playerPool.get(key);
     if (player != null) {
       player.reset();
     }
-    callback.invoke();
   }
 
   @ReactMethod

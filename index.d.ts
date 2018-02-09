@@ -95,7 +95,7 @@ declare class Sound {
    * @param onError Optional callback function if loading file failed
    * @param streamType streamType
    */
-  setStreamType(streamType: { audioStreamType: AudioManagerAudioStreamType }, onError: (error: any) => void)
+  setStreamType(streamType: AudioManagerAudioStreamType, onError: (error: any) => void)
 
   /**
    * Plays the loaded file
