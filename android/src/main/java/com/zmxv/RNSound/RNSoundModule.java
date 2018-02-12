@@ -21,7 +21,6 @@ import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
-import com.facebook.react.modules.core.ExceptionsManagerModule;
 
 import java.io.File;
 import java.util.HashMap;
@@ -37,11 +36,13 @@ public class RNSoundModule extends ReactContextBaseJavaModule {
   final static Object NULL = null;
   BroadcastReceiver broadcastReceiverHeadsetPlugged = null;
   String category;
+  private AudioManager am;
 
   public RNSoundModule(ReactApplicationContext context) {
     super(context);
     this.context = context;
     this.category = null;
+    am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
   }
 
   private void setOnPlay(boolean isPlaying, final Integer playerKey) {
@@ -81,14 +82,19 @@ public class RNSoundModule extends ReactContextBaseJavaModule {
       }
     }
 
-    MediaPlayer player = createMediaPlayer(fileName);
-    if (player == null) {
-      WritableMap e = Arguments.createMap();
-      e.putInt("code", -1);
-      e.putString("message", "resource not found");
-      return;
-    }
+    MediaPlayer player = this.playerPool.get(key);
 
+    if (player == null) {
+      player = createMediaPlayer(fileName);
+      if (player == null) {
+        WritableMap e = Arguments.createMap();
+        e.putInt("code", -1);
+        e.putString("message", "resource not found");
+        return;
+      }
+    } else {
+      player = setSource(player,fileName);
+    }
     final RNSoundModule module = this;
     final int audioStreamTypeFinal = audioStreamType;
 
@@ -112,7 +118,6 @@ public class RNSoundModule extends ReactContextBaseJavaModule {
         player.setAudioStreamType(category);
       }
     }
-
     player.setAudioStreamType(audioStreamTypeFinal);
 
     player.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
@@ -122,7 +127,6 @@ public class RNSoundModule extends ReactContextBaseJavaModule {
       public synchronized void onPrepared(MediaPlayer mp) {
         if (callbackWasCalled) return;
         callbackWasCalled = true;
-
         module.playerPool.put(key, mp);
         WritableMap props = Arguments.createMap();
         props.putDouble("duration", mp.getDuration() * .001);
@@ -134,7 +138,6 @@ public class RNSoundModule extends ReactContextBaseJavaModule {
         }
         module.context.getCurrentActivity().setVolumeControlStream(audioStreamTypeFinal);
       }
-
     });
 
     player.setOnErrorListener(new OnErrorListener() {
@@ -156,7 +159,6 @@ public class RNSoundModule extends ReactContextBaseJavaModule {
         return true;
       }
     });
-
     try {
       player.prepareAsync();
     } catch (IllegalStateException ignored) {
@@ -165,9 +167,8 @@ public class RNSoundModule extends ReactContextBaseJavaModule {
     }
   }
 
-  protected MediaPlayer createMediaPlayer(final String fileName) {
+  protected MediaPlayer setSource(MediaPlayer mediaPlayer, final String fileName) {
     int res = this.context.getResources().getIdentifier(fileName, "raw", this.context.getPackageName());
-    MediaPlayer mediaPlayer = new MediaPlayer();
     if (res != 0) {
       try {
         AssetFileDescriptor afd = context.getResources().openRawResourceFd(res);
@@ -216,6 +217,12 @@ public class RNSoundModule extends ReactContextBaseJavaModule {
       return mediaPlayer;
     }
     return null;
+  }
+
+  protected MediaPlayer createMediaPlayer(final String fileName) {
+    MediaPlayer mediaPlayer = new MediaPlayer();
+    mediaPlayer = setSource(mediaPlayer, fileName);
+    return mediaPlayer;
   }
 
   @ReactMethod

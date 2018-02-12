@@ -117,10 +117,51 @@ Sound.prototype.stop = function(callback) {
   return this;
 };
 
+Sound.prototype.setStreamType = function(streamType, callback) {
+  // For android only.
+  // reset() is required before setStreamType
+  // sets streamType, and prepare again.
+  if (streamType == null) {
+    const error = new Error('invalid streamType');
+    throw error;
+    callback && callback(error);
+    return this;
+  }
+  if (!IsAndroid) {
+    const error = new Error('setStreamType is only supported in Android');
+    throw error;
+    callback && callback(error);
+    return this;
+  }
+  if (this._loaded) {
+    const error = new Error('reset() is required If player is already prepared.');
+    throw error;
+    callback && callback(error);
+    return this;
+  }
+  RNSound.prepare(this._filename, this._key, { audioStreamType: streamType } || {}, (error, props) => {
+    if (props) {
+      if (typeof props.duration === 'number') {
+        this._duration = props.duration;
+      }
+      if (typeof props.numberOfChannels === 'number') {
+        this._numberOfChannels = props.numberOfChannels;
+      }
+    }
+    if (error === null) {
+      this._loaded = true;
+      callback && callback();
+    } else {
+      callback && callback(error);
+    }
+  });
+}
+
 Sound.prototype.reset = function() {
   if (this._loaded && IsAndroid) {
     RNSound.reset(this._key);
     this._playing = false;
+    this._loaded = false;
   }
   return this;
 };
