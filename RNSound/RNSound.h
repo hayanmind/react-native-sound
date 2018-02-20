@@ -8,5 +8,6 @@
 #import <React/RCTEventEmitter.h>
 
 @interface RNSound : RCTEventEmitter <RCTBridgeModule, AVAudioPlayerDelegate>
-
+@interface RNSound : NSObject <RCTBridgeModule, AVAudioPlayerDelegate>
+@property (nonatomic, weak) NSNumber* _key;
 @end

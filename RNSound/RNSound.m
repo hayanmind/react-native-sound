@@ -76,6 +76,7 @@
   if (key == nil) return;
 
   @synchronized(key) {
+    [self setOnPlay:NO forPlayerKey:key];
     RCTResponseSenderBlock callback = [self callbackForKey:key];
     if (callback) {
       callback(@[@(flag)]);
@@ -88,7 +89,7 @@ RCT_EXPORT_MODULE();
 
 - (NSArray<NSString *> *)supportedEvents
 {
-    return @[@"RouteChange"];
+    return @[@"RouteChange", @"onPlayChange"];
 }
 
 -(NSDictionary *)constantsToExport {
@@ -225,6 +226,7 @@ RCT_EXPORT_METHOD(play:(nonnull NSNumber*)key withCallback:(RCTResponseSenderBlo
   if (player) {
     [[self callbackPool] setObject:[callback copy] forKey:key];
     [player play];
+    [self setOnPlay:YES forPlayerKey:key];
   }
 }
 
@@ -299,7 +301,6 @@ RCT_EXPORT_METHOD(getCurrentTime:(nonnull NSNumber*)key
   }
 }
 
-<<<<<<< HEAD
 RCT_EXPORT_METHOD(setSpeakerphoneOn:(BOOL)enabled) {
   AVAudioSession *session = [AVAudioSession sharedInstance];
   NSError *error = nil;
@@ -349,21 +350,11 @@ RCT_EXPORT_METHOD(removeRouteChangeListener) {
                                                 object: [AVAudioSession sharedInstance]];
 }
 
-RCT_REMAP_METHOD(isPlaying,
-                 playerKey:(nonnull NSNumber*)key
-                 resolver:(RCTPromiseResolveBlock)resolve
-                 rejecter:(RCTPromiseRejectBlock)reject) {
-  AVAudioPlayer* player = [self playerForKey:key];
-  if (player) {
-    resolve(@(player.isPlaying));
-  } else {
-    resolve(@(false));
-  }
-=======
 + (BOOL)requiresMainQueueSetup
 {
     return YES;
->>>>>>> f4e6216aa692957d22c57fdb73a302951e91cc57
 }
-
+- (void)setOnPlay:(BOOL)isPlaying forPlayerKey:(nonnull NSNumber*)playerKey {
+  [self sendEventWithName:@"onPlayChange" body:@{@"isPlaying": isPlaying ? @YES : @NO, @"playerKey": playerKey}];
+}
 @end

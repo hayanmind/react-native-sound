@@ -207,9 +207,9 @@ declare class Sound {
   setSpeakerphoneOn(value: boolean): void
 
   /**
-   * Return promise with isPlaying.
+   * Whether the player is playing or not.
    */
-  isPlaying(): Promise<boolean>
+  isPlaying(): boolean
 }
 
 export = Sound;
