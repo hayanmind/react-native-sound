@@ -21,7 +21,7 @@ Reset |  | ✓ |
 Release resource | ✓ | ✓ | ✓
 Get duration | ✓ | ✓ | ✓
 Get number of channels | ✓ |   |
-Get is audio currently playing | ✓ | ✓ |   |
+Get is sound currently playing | ✓ | ✓ |   |
 Get/set volume | ✓ | ✓ | ✓
 Get/set system volume |   | ✓ |
 Get/set pan | ✓ |   |
