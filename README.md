@@ -11,15 +11,17 @@ Feature | iOS | Android | Windows
 Load sound from the app bundle | ✓ | ✓ | ✓
 Load sound from other directories | ✓ | ✓ | ✓
 Load sound from the network | ✓ | ✓ |
+Load sound with specific stream type | ✓ | ✓ |
 Play sound | ✓ | ✓ | ✓
 Playback completion callback | ✓ | ✓ | ✓
 Pause | ✓ | ✓ | ✓
 Resume | ✓ | ✓ | ✓
 Stop | ✓ | ✓ | ✓
-Reset |  | ✓ | 
+Reset |  | ✓ |
 Release resource | ✓ | ✓ | ✓
 Get duration | ✓ | ✓ | ✓
 Get number of channels | ✓ |   |
+Get is audio currently playing | ✓ | ✓ |   |
 Get/set volume | ✓ | ✓ | ✓
 Get/set system volume |   | ✓ |
 Get/set pan | ✓ |   |
