@@ -127,7 +127,6 @@ public class RNSoundModule extends ReactContextBaseJavaModule {
       public synchronized void onPrepared(MediaPlayer mp) {
         if (callbackWasCalled) return;
         callbackWasCalled = true;
-        module.playerPool.put(key, mp);
         WritableMap props = Arguments.createMap();
         props.putDouble("duration", mp.getDuration() * .001);
         try {
@@ -145,6 +144,9 @@ public class RNSoundModule extends ReactContextBaseJavaModule {
 
       @Override
       public synchronized boolean onError(MediaPlayer mp, int what, int extra) {
+        if (module.playerPool.get(key) != null) {
+          module.playerPool.remove(key);
+        }
         if (callbackWasCalled) return true;
         callbackWasCalled = true;
         try {
@@ -160,8 +162,16 @@ public class RNSoundModule extends ReactContextBaseJavaModule {
       }
     });
     try {
+      /*
+      * To prevent "MediaPlayer finalized without being released"
+      * https://stackoverflow.com/a/15023442
+      */
+      module.playerPool.put(key, player);
       player.prepareAsync();
     } catch (IllegalStateException ignored) {
+      if (module.playerPool.get(key) != null) {
+        module.playerPool.remove(key);
+      }
       // When loading files from a file, we useMediaPlayer.create, which actually
       // prepares the audio for us already. So we catch and ignore this error
     }
