@@ -279,6 +279,8 @@ Sound.prototype.setCurrentTime = function(value) {
 Sound.prototype.setSpeakerphoneOn = function(value) {
   if (IsAndroid) {
     RNSound.setSpeakerphoneOn(this._key, value);
+  } else if (!IsAndroid && !IsWindows) {
+    console.wran('Use static method Sound.setSpeakerphoneOn() instead for iOS!')
   }
 };
 
@@ -360,7 +362,7 @@ Sound.setCategory = function(value, mixWithOthers = false, allowBluetooth = fals
   }
 };
 
-Sound.setSpeakerphoneOn = function(value) {
+Sound.setSpeakerphoneOnIos = function(value) {
   if (!IsAndroid && !IsWindows) {
     RNSound.setSpeakerphoneOn(value);
   }
