@@ -280,7 +280,7 @@ Sound.prototype.setSpeakerphoneOn = function(value) {
   if (IsAndroid) {
     RNSound.setSpeakerphoneOn(this._key, value);
   } else if (!IsAndroid && !IsWindows) {
-    RNSound.setSpeakerphoneOn(value);
+    console.wran('Use static method Sound.setSpeakerphoneOn() instead for iOS!')
   }
 };
 
@@ -359,6 +359,12 @@ Sound.setActive = function(value) {
 Sound.setCategory = function(value, mixWithOthers = false, allowBluetooth = false) {
   if (!IsAndroid && !IsWindows) {
     RNSound.setCategory(value, mixWithOthers, allowBluetooth);
+  }
+};
+
+Sound.setSpeakerphoneOnIos = function(value) {
+  if (!IsAndroid && !IsWindows) {
+    RNSound.setSpeakerphoneOn(value);
   }
 };
 
